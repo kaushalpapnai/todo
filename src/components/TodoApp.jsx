@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../store/slices/authSlice';
-import { addTodo, deleteTodo, updateTodoPriority} from '../store/slices/todoSlice';
+import { addTodo, deleteTodo } from '../store/slices/todoSlice';
 import { fetchWeather } from '../store/slices/weatherSlice';
 import { useNavigate } from 'react-router-dom';
+import { FiLogOut, FiPlus, FiTrash2, FiSun, FiCloud, FiCloudRain } from 'react-icons/fi';
 
 const TodoApp = () => {
   const [task, setTask] = useState('');
@@ -11,9 +12,8 @@ const TodoApp = () => {
   const dispatch = useDispatch();
   const todos = useSelector((store) => store.todos.todos);
   const weather = useSelector((store) => store.weather.data);
-  console.log(weather)
   const user = useSelector((store) => store.auth.user);
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   useEffect(() => {
     dispatch(fetchWeather());
@@ -41,71 +41,118 @@ const TodoApp = () => {
     navigate('/login');
   };
 
+  const getWeatherIcon = () => {
+    if (!weather) return null;
+    const mainWeather = weather.weather[0].main.toLowerCase();
+    if (mainWeather.includes('rain')) return <FiCloudRain className="w-6 h-6" />;
+    if (mainWeather.includes('cloud')) return <FiCloud className="w-6 h-6" />;
+    return <FiSun className="w-6 h-6" />;
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="container mx-auto max-w-xl">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-primary">
-            Welcome, {user.username}!
-          </h1>
+    <div className="min-h-screen bg-slate-50 p-4 md:p-6 font-sans">
+      <div className="container mx-auto max-w-2xl">
+        {/* Header Section */}
+        <header className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-800">Good day, {user.username}</h1>
+            <p className="text-slate-500 text-sm">
+              {new Date().toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </p>
+          </div>
           <button
             onClick={handleLogout}
-            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+            className="flex items-center gap-2 text-slate-600 hover:text-slate-800 transition-colors"
+            aria-label="Logout"
           >
-            Logout
+            <FiLogOut className="w-5 h-5" />
+            <span className="font-medium hidden sm:inline">Sign out</span>
           </button>
-        </div>
+        </header>
 
+        {/* Weather Card */}
         {weather && (
-          <div className="bg-white p-4 rounded-lg shadow-md mb-6">
-            <h2 className="text-xl font-semibold">Current Weather</h2>
-            <p>
-              {weather.name}: {weather.main.temp}°C, {weather.weather[0].description}
-            </p>
+          <div className="bg-white rounded-xl p-4 shadow-sm mb-6 border border-slate-100">
+            <div className="flex items-center gap-4">
+              <div className="text-sky-500">
+                {getWeatherIcon()}
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-slate-500">Current weather</h3>
+                <p className="text-slate-800 font-medium">
+                  {Math.round(weather.main.temp)}°C • {weather.weather[0].description}
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
-        <form onSubmit={handleAddTodo} className="bg-white p-6 rounded-lg shadow-md mb-6">
-          <div className="flex space-x-4 mb-4">
+        {/* Add Task Form */}
+        <form 
+          onSubmit={handleAddTodo} 
+          className="bg-white rounded-xl shadow-sm mb-6 border border-slate-100"
+        >
+          <div className="flex gap-2 p-2">
             <input
               type="text"
               value={task}
               onChange={(e) => setTask(e.target.value)}
-              placeholder="Enter a new task"
-              className="flex-grow px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="What needs to be done?"
+              className="flex-grow px-4 py-3 rounded-lg border-0 text-slate-800 bg-slate-50 focus:ring-2 focus:ring-sky-500 focus:bg-white placeholder:text-slate-400"
+              aria-label="Add new task"
             />
             <select
               value={priority}
               onChange={(e) => setPriority(e.target.value)}
-              className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+              className="px-3 py-2 rounded-lg bg-slate-50 border-0 text-slate-600 focus:ring-2 focus:ring-sky-500"
+              aria-label="Select task priority"
             >
               <option value="low">Low</option>
               <option value="medium">Medium</option>
               <option value="high">High</option>
             </select>
+            <button
+              type="submit"
+              className="p-3 rounded-lg bg-sky-500 text-white hover:bg-sky-600 transition-colors"
+              aria-label="Add task"
+            >
+              <FiPlus className="w-5 h-5" />
+            </button>
           </div>
-          <button
-            type="submit"
-            className="w-full bg-primary text-white py-2 rounded-md hover:bg-blue-600 transition duration-300"
-          >
-            Add Task
-          </button>
         </form>
 
-        <div className="space-y-4">
+        {/* Todo List */}
+        <div className="space-y-2">
+          {todos.length === 0 && (
+            <div className="text-center py-8 text-slate-400">
+              No tasks yet. Add your first task above.
+            </div>
+          )}
           {todos.map((todo) => (
             <div
               key={todo.id}
-              className={`flex items-center justify-between p-4 rounded-lg shadow-md 
-                ${todo.priority === 'high' ? 'bg-red-100' : 
-                  todo.priority === 'medium' ? 'bg-yellow-100' : 'bg-green-100'}`}
+              className="group flex items-center justify-between p-4 bg-white rounded-xl shadow-sm border border-slate-100 hover:border-sky-100 transition-all"
             >
-              <span className="flex-grow">{todo.text}</span>
+              <div className="flex items-center gap-3">
+                <div 
+                  className={`w-2 h-8 rounded-full ${
+                    todo.priority === 'high' ? 'bg-red-500' :
+                    todo.priority === 'medium' ? 'bg-amber-500' : 'bg-emerald-500'
+                  }`}
+                  aria-hidden="true"
+                />
+                <span className="text-slate-800">{todo.text}</span>
+              </div>
               <button
                 onClick={() => handleDeleteTodo(todo.id)}
-                className="bg-red-500 text-white px-3 py-1 rounded-md ml-4 hover:bg-red-600"
+                className="p-2 text-slate-400 hover:text-red-500 rounded-md hover:bg-red-50 transition-colors"
+                aria-label={`Delete task: ${todo.text}`}
               >
-                Delete
+                <FiTrash2 className="w-5 h-5" />
               </button>
             </div>
           ))}

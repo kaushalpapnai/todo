@@ -21,7 +21,6 @@ export const fetchWeather = createAsyncThunk(
     }
   }
 );
-console.log("API Key:", apiKey);
 
 const weatherSlice = createSlice({
   name: 'weather',
