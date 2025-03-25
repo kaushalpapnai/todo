@@ -1,14 +1,22 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
 
 export const fetchWeather = createAsyncThunk(
   'weather/fetchWeather',
   async (city = 'London', { rejectWithValue }) => {
     try {
-      const response = await axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=YOUR_API_KEY&units=metric`);
-      return response.data;
+      const response = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${process.env.REACT_APP_WEATHER_API_KEY}&units=metric`
+      );
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log(data)
+      return data;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.message);
     }
   }
 );
@@ -25,11 +33,11 @@ const weatherSlice = createSlice({
     builder
       .addCase(fetchWeather.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(fetchWeather.fulfilled, (state, action) => {
         state.loading = false;
         state.data = action.payload;
-        state.error = null;
       })
       .addCase(fetchWeather.rejected, (state, action) => {
         state.loading = false;
