@@ -3,14 +3,17 @@ import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../store/slices/authSlice';
 import { addTodo, deleteTodo, updateTodoPriority} from '../store/slices/todoSlice';
 import { fetchWeather } from '../store/slices/weatherSlice';
+import { useNavigate } from 'react-router-dom';
 
 const TodoApp = () => {
   const [task, setTask] = useState('');
   const [priority, setPriority] = useState('medium');
   const dispatch = useDispatch();
-  const todos = useSelector((state) => state.todos.todos);
-  const weather = useSelector((state) => state.weather.data);
-  const user = useSelector((state) => state.auth.user);
+  const todos = useSelector((store) => store.todos.todos);
+  const weather = useSelector((store) => store.weather.data);
+  console.log(weather)
+  const user = useSelector((store) => store.auth.user);
+  const navigate = useNavigate()
 
   useEffect(() => {
     dispatch(fetchWeather());
@@ -35,6 +38,7 @@ const TodoApp = () => {
 
   const handleLogout = () => {
     dispatch(logout());
+    navigate('/login');
   };
 
   return (

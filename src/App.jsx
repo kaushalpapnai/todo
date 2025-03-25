@@ -6,6 +6,7 @@ import {
 } from "react-router-dom";
 import { useSelector } from "react-redux";
 import Login from "./components/Login.jsx";
+import TodoApp from "./components/TodoApp.jsx";
 
 
 function App() {
@@ -14,7 +15,15 @@ function App() {
   const router = createBrowserRouter([
     {
       path: "/",
-      element: isAuthenticated ? <Navigate to="/todo" /> : <Login />,
+      element: isAuthenticated ? <Navigate to="/login" /> : <Login />,
+    },
+    {
+      path: "/login",
+      element:<Login />,
+    },
+    {
+      path: "/todo",
+      element: <TodoApp />,
     },
   ]);
 
