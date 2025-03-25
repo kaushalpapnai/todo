@@ -1,19 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { logout } from '../store/slices/authSlice';
-import { addTodo, deleteTodo } from '../store/slices/todoSlice';
-import { fetchWeather } from '../store/slices/weatherSlice';
-import { useNavigate } from 'react-router-dom';
-import { FiLogOut, FiPlus, FiTrash2, FiSun, FiCloud, FiCloudRain } from 'react-icons/fi';
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { logout } from "../store/slices/authSlice";
+import { addTodo, deleteTodo } from "../store/slices/todoSlice";
+import { fetchWeather } from "../store/slices/weatherSlice";
+import { useNavigate } from "react-router-dom";
+import {
+  FiLogOut,
+  FiPlus,
+  FiTrash2,
+  FiSun,
+  FiCloud,
+  FiCloudRain,
+} from "react-icons/fi";
 
 const TodoApp = () => {
-  const [task, setTask] = useState('');
-  const [priority, setPriority] = useState('medium');
+  const [task, setTask] = useState("");
+  const [priority, setPriority] = useState("medium");
+  const [cityInput, setCityInput] = useState("");
+  const [currentCity, setCurrentCity] = useState("London");
   const dispatch = useDispatch();
   const todos = useSelector((store) => store.todos.todos);
   const weather = useSelector((store) => store.weather.data);
   const user = useSelector((store) => store.auth.user);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    dispatch(fetchWeather(currentCity));
+  }, [dispatch, currentCity]);
 
   useEffect(() => {
     dispatch(fetchWeather());
@@ -22,13 +35,15 @@ const TodoApp = () => {
   const handleAddTodo = (e) => {
     e.preventDefault();
     if (task.trim()) {
-      dispatch(addTodo({
-        id: Date.now(),
-        text: task,
-        priority,
-        completed: false,
-      }));
-      setTask('');
+      dispatch(
+        addTodo({
+          id: Date.now(),
+          text: task,
+          priority,
+          completed: false,
+        })
+      );
+      setTask("");
     }
   };
 
@@ -38,14 +53,24 @@ const TodoApp = () => {
 
   const handleLogout = () => {
     dispatch(logout());
-    navigate('/login');
+    navigate("/login");
+  };
+
+  const handleCitySubmit = (e) => {
+    e.preventDefault();
+    if (cityInput.trim()) {
+      setCurrentCity(cityInput.trim());
+      setCityInput("");
+    }
   };
 
   const getWeatherIcon = () => {
     if (!weather) return null;
     const mainWeather = weather.weather[0].main.toLowerCase();
-    if (mainWeather.includes('rain')) return <FiCloudRain className="w-5 h-5 sm:w-6 sm:h-6" />;
-    if (mainWeather.includes('cloud')) return <FiCloud className="w-5 h-5 sm:w-6 sm:h-6" />;
+    if (mainWeather.includes("rain"))
+      return <FiCloudRain className="w-5 h-5 sm:w-6 sm:h-6" />;
+    if (mainWeather.includes("cloud"))
+      return <FiCloud className="w-5 h-5 sm:w-6 sm:h-6" />;
     return <FiSun className="w-5 h-5 sm:w-6 sm:h-6" />;
   };
 
@@ -55,18 +80,20 @@ const TodoApp = () => {
         {/* Header Section */}
         <header className="flex justify-between items-center mb-6 sm:mb-8">
           <div>
-            <h1 className="text-xl sm:text-2xl font-semibold text-slate-800">Good day, {user.username}</h1>
+            <h1 className="text-xl sm:text-2xl font-semibold text-slate-800">
+              Good day, {user.username}
+            </h1>
             <p className="text-slate-500 text-xs sm:text-sm">
-              {new Date().toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                month: 'long', 
-                day: 'numeric' 
+              {new Date().toLocaleDateString("en-US", {
+                weekday: "long",
+                month: "long",
+                day: "numeric",
               })}
             </p>
           </div>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-1 sm:gap-2 text-slate-600 hover:text-slate-800 transition-colors"
+            className="flex items-center gap-1 sm:gap-2 text-slate-600 hover:text-slate-800 transition-colors cursor-pointer"
             aria-label="Logout"
           >
             <FiLogOut className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -74,26 +101,44 @@ const TodoApp = () => {
           </button>
         </header>
 
-        {/* Weather Card */}
+        {/* Weather Card with City Input */}
         {weather && (
           <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm mb-4 sm:mb-6 border border-slate-100">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className="text-sky-500">
-                {getWeatherIcon()}
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="text-sky-500">{getWeatherIcon()}</div>
+                <div>
+                  <h3 className="text-xs sm:text-sm font-medium text-slate-500">
+                    Weather in {currentCity}
+                  </h3>
+                  <p className="text-slate-800 text-sm sm:text-base font-medium">
+                    {Math.round(weather.main.temp)}°C •{" "}
+                    {weather.weather[0].description}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-xs sm:text-sm font-medium text-slate-500">Current weather</h3>
-                <p className="text-slate-800 text-sm sm:text-base font-medium">
-                  {Math.round(weather.main.temp)}°C • {weather.weather[0].description}
-                </p>
-              </div>
+
+              <form onSubmit={handleCitySubmit} className="flex gap-2">
+                <input
+                  type="text"
+                  value={cityInput}
+                  onChange={(e) => setCityInput(e.target.value)}
+                  placeholder="Enter city name"
+                  className="flex-grow px-3 py-2 text-sm rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+                <button
+                  type="submit"
+                  className="px-3 py-2 bg-sky-500 text-white text-sm rounded-lg hover:bg-sky-600 transition-colors cursor-pointer"
+                >
+                  Update
+                </button>
+              </form>
             </div>
           </div>
         )}
-
         {/* Add Task Form */}
-        <form 
-          onSubmit={handleAddTodo} 
+        <form
+          onSubmit={handleAddTodo}
           className="bg-white rounded-lg sm:rounded-xl shadow-sm mb-4 sm:mb-6 border border-slate-100"
         >
           <div className="flex gap-1 sm:gap-2 p-1 sm:p-2">
@@ -117,7 +162,7 @@ const TodoApp = () => {
             </select>
             <button
               type="submit"
-              className="p-2 sm:p-3 rounded-lg bg-sky-500 text-white hover:bg-sky-600 transition-colors"
+              className="p-2 sm:p-3 rounded-lg bg-sky-500 text-white hover:bg-sky-600 transition-colors cursor-pointer"
               aria-label="Add task"
             >
               <FiPlus className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -138,18 +183,23 @@ const TodoApp = () => {
               className="group flex items-center justify-between p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-100 hover:border-sky-100 transition-all"
             >
               <div className="flex items-center gap-2 sm:gap-3">
-                <div 
+                <div
                   className={`w-2 h-6 sm:h-8 rounded-full ${
-                    todo.priority === 'high' ? 'bg-red-500' :
-                    todo.priority === 'medium' ? 'bg-amber-500' : 'bg-emerald-500'
+                    todo.priority === "high"
+                      ? "bg-red-500"
+                      : todo.priority === "medium"
+                      ? "bg-amber-500"
+                      : "bg-emerald-500"
                   }`}
                   aria-hidden="true"
                 />
-                <span className="text-sm sm:text-base text-slate-800">{todo.text}</span>
+                <span className="text-sm sm:text-base text-slate-800">
+                  {todo.text}
+                </span>
               </div>
               <button
                 onClick={() => handleDeleteTodo(todo.id)}
-                className="p-1 sm:p-2 text-slate-400 hover:text-red-500 rounded-md hover:bg-red-50 transition-colors"
+                className="p-1 sm:p-2 text-slate-400 hover:text-red-500 rounded-md hover:bg-red-50 transition-colors cursor-pointer"
                 aria-label={`Delete task: ${todo.text}`}
               >
                 <FiTrash2 className="w-4 h-4 sm:w-5 sm:h-5" />

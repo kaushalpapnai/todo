@@ -103,7 +103,7 @@ const Login = () => {
         {/* Submit Button */}
         <button
           type="submit"
-          className="w-full flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-600 text-white py-2 sm:py-3 px-4 rounded-lg transition-colors"
+          className="w-full flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-600 text-white py-2 sm:py-3 px-4 rounded-lg transition-colors cursor-pointer"
         >
           Continue
           <FiArrowRight className="w-5 h-5" />
